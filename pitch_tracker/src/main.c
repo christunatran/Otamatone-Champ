@@ -131,10 +131,13 @@ int main( int argc, char **argv ) {
          data[j] = processSecondOrderFilter( data[j], mem1, a, b );
          //data[j] = processSecondOrderFilter( data[j], mem2, a, b );
       }
-      // count zero crossings:
+      // count zero crossings and measure amplitude:
       static int sign = 1;
+      static float amplitude = 0;
       int zeroCrossing = 0;
       for( int j=0; j<LOOP_SIZE; ++j ) {
+         float a = data[j]*data[j];
+         amplitude = a *.01 + amplitude * .99;
          if( sign == 1 ) {
             if( data[j] < 0 ) {
               sign = -1;
@@ -150,7 +153,7 @@ int main( int argc, char **argv ) {
       static float zeroAve = 0;
       zeroAve = zeroCrossing * .1 + zeroAve * .9 ;
 #if ONLY_FLOATS
-      printf( "%g\n", zeroAve );
+      printf( "%g\t%g\n", zeroAve, sqrt(amplitude) );
 #else
       printf( "Zero Crossings: %d\t%d\t", zeroCrossing, (int)(zeroAve*100) );
       for( int i=0; i<zeroAve*5; ++i )
