@@ -119,6 +119,7 @@ int main( int argc, char **argv ) {
       zeroAve = zeroCrossing * .1 + zeroAve * .9 ;
 #if ONLY_FLOATS
       printf( "%g\t%g\n", zeroAve, sqrt(amplitude) );
+      fflush(stdout);
 #else
       printf( "Zero Crossings: %d\t%d\t", zeroCrossing, (int)(zeroAve*100) );
       for( int i=0; i<zeroAve*5; ++i )
