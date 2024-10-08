@@ -28,24 +28,18 @@
 #define ONLY_FLOATS (TRUE)
 
 //a must be of length 2, and b must be of length 3
-float processSecondOrderFilter( float x, float *mem, float *a, float *b );
 void computeSecondOrderLowPassParameters( float srate, float f, float *a, float *b );
 //mem must be of length 4.
-//float processSecondOrderFilter( float x, float *mem, float *a, float *b );
+float processSecondOrderFilter( float x, float *mem, float *a, float *b );
 void signalHandler( int signum ) ;
 
 static bool running = TRUE;
-
-static char * NOTES[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
 
 /* -- main function -- */
 int main( int argc, char **argv ) {
    PaStreamParameters inputParameters;
    float a[2], b[3], mem1[4], mem2[4];
    float data[LOOP_SIZE];
-   float freqTable[LOOP_SIZE];
-   char * noteNameTable[LOOP_SIZE];
-   float notePitchTable[LOOP_SIZE];
    PaStream *stream = NULL;
    PaError err = 0;
    struct sigaction action;
@@ -62,33 +56,6 @@ int main( int argc, char **argv ) {
    computeSecondOrderLowPassParameters( SAMPLE_RATE, 330, a, b );
    mem1[0] = 0; mem1[1] = 0; mem1[2] = 0; mem1[3] = 0;
    mem2[0] = 0; mem2[1] = 0; mem2[2] = 0; mem2[3] = 0;
-   //freq/note tables
-   for( int i=0; i<LOOP_SIZE; ++i ) {
-      freqTable[i] = ( SAMPLE_RATE * i ) / (float) ( LOOP_SIZE );
-   }
-   for( int i=0; i<LOOP_SIZE; ++i ) {
-      noteNameTable[i] = NULL;
-      notePitchTable[i] = -1;
-   }
-   for( int i=0; i<127; ++i ) {
-      float pitch = ( 440.0 / 32.0 ) * pow( 2, (i-9.0)/12.0 ) ;
-      if( pitch > SAMPLE_RATE / 2.0 )
-         break;
-      //find the closest frequency using brute force.
-      float min = 1000000000.0;
-      int index = -1;
-      for( int j=0; j<LOOP_SIZE; ++j ) {
-         if( fabsf( freqTable[j]-pitch ) < min ) {
-             min = fabsf( freqTable[j]-pitch );
-             index = j;
-         }
-      }
-      noteNameTable[index] = NOTES[i%12];
-      notePitchTable[index] = pitch;
-      //printf( "%f %d %s\n", pitch, index, noteNameTable[index] );
-   }
-
-
 
    // initialize portaudio
    err = Pa_Initialize();
@@ -100,8 +67,8 @@ int main( int argc, char **argv ) {
    inputParameters.suggestedLatency = Pa_GetDeviceInfo( inputParameters.device )->defaultHighInputLatency ;
    inputParameters.hostApiSpecificStreamInfo = NULL;
 
-   printf( "Opening %s\n",
-           Pa_GetDeviceInfo( inputParameters.device )->name );
+   //printf( "Opening %s\n",
+   //        Pa_GetDeviceInfo( inputParameters.device )->name );
 
    err = Pa_OpenStream( &stream,
                         &inputParameters,
@@ -122,11 +89,9 @@ int main( int argc, char **argv ) {
    {
       // read some data
       err = Pa_ReadStream( stream, data, LOOP_SIZE );
-      if( err ) goto error; //FIXME: we don't want to err on xrun
+      //if( err ) goto error; //FIXME: we don't want to err on xrun
 
       // low-pass
-      //for( int i=0; i<LOOP_SIZE; ++i )
-      //   printf( "in %f\n", data[i] );
       for( int j=0; j<LOOP_SIZE; ++j ) {
          data[j] = processSecondOrderFilter( data[j], mem1, a, b );
          //data[j] = processSecondOrderFilter( data[j], mem2, a, b );
@@ -161,13 +126,10 @@ int main( int argc, char **argv ) {
       printf( "\n" );
 #endif
 
-      //float freq = freqTable[maxIndex];
    }
    err = Pa_StopStream( stream );
    if( err != paNoError ) goto error;
 
-   // cleanup
-   //destroyfft( fft );
    Pa_Terminate();
 
    return 0;
