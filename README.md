@@ -1,3 +1,12 @@
+# This project is aimed at turning an Otamatone into a controller for the game Trombone Champ.
+
+
+
+## Build Log:
+
+
+
+
 # install brew
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
